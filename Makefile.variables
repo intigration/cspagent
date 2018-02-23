@@ -1,0 +1,9 @@
+
+BUILD_DIR       = builds
+OBJ_DIR         = $(BUILD_DIR)/$(CSP_PLATFORM)/$(CSP_DISTRO)
+SRC_DIR         = src
+CHK_DIR_EXISTS  = test -d
+CHK_FILE_EXISTS = test -e
+MKDIR           = mkdir -p
+PWD             = pwd
+TARGET_BIN      = $(TARGETFS)/usr/bin
