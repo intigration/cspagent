@@ -13,7 +13,9 @@ LDFLAGS +=	-L$(SYSROOT)/usr/local/mgc/lib		\
 			-L$(SYSROOT)/usr/lib				\
 			-L$(SYSROOT)/lib					\
 			-Wl,-rpath=/usr/local/mgc/lib		\
-			-lcspeappagent 
+			-lcspeappagent -lcspsdkutils        \
+            -lcspthread -luuid -lcspparser      \
+            -lcspboxmqtt
 										  
 OBJECTS	  += $(OBJ_DIR)/cspagent_app.o
 
