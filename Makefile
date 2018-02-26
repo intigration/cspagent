@@ -15,7 +15,7 @@ LDFLAGS +=	-L$(SYSROOT)/usr/local/mgc/lib		\
 			-Wl,-rpath=/usr/local/mgc/lib		\
 			-lcspeappagent 
 										  
-OBJECTS	  += $(OBJ_DIR)/application.o
+OBJECTS	  += $(OBJ_DIR)/cspagent_app.o
 
 INCLUDES  += -Iinc								\
 			 -I$(SYSROOT)/usr/include			\

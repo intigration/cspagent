@@ -13,13 +13,13 @@
  *
  * FILE NAME
  *
- *       server.cpp
+ *       cspagent_app.cpp
  *
  * DESCRIPTION
  *
  *
  ***********************************************************************/
-#include "application.h"
+#include "cspagent_app.h"
 
 AgentApplication::AgentApplication()
 {
