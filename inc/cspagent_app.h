@@ -21,7 +21,7 @@
 #ifndef _CSPBOX_CONF_APP_H_
 #define _CSPBOX_CONF_APP_H_
 
-#include <cspsdk/cspeappagent/appagent.h>
+#include <cspeappsdk/cspeappagent/appagent.h>
 
 class AgentApplication {
 public:
