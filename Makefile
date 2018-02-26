@@ -27,41 +27,41 @@ all: $(APP)
 
 # Link Objects & Produce Output
 $(APP): $(OBJECTS)
-                @echo ""
-                @echo "Linking..." $(APP)
-                @$(CXX) $(CXXFLAGS) -o $(OBJ_DIR)/$(APP) $(OBJECTS) $(LDFLAGS)          
+    @echo ""
+    @echo "Linking..." $(APP)
+    @$(CXX) $(CXXFLAGS) -o $(OBJ_DIR)/$(APP) $(OBJECTS) $(LDFLAGS)          
 
 # Compile all objects
 $(OBJ_DIR)/%.o : %.cpp
-        @$(CHK_DIR_EXISTS) $(OBJ_DIR) || $(MKDIR) $(OBJ_DIR) 
-        @echo "Compiling..." $<
-        @$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+    @$(CHK_DIR_EXISTS) $(OBJ_DIR) || $(MKDIR) $(OBJ_DIR) 
+    @echo "Compiling..." $<
+    @$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
         
 .PHONEY : clean
 clean:
-        @echo ""
-        @echo "Cleaning $(APP)..."
-        @rm -rf $(OBJECTS) $(OBJ_DIR)
-        @echo "DONE"
+    @echo ""
+    @echo "Cleaning $(APP)..."
+    @rm -rf $(OBJECTS) $(OBJ_DIR)
+    @echo "DONE"
         
 .PHONEY : install
 install:
-        @echo ""
-        @echo "Installing $(APP)..."
-        @cp $(OBJ_DIR)/$(APP) $(TARGET_BIN)
+    @echo ""
+    @echo "Installing $(APP)..."
+    @cp $(OBJ_DIR)/$(APP) $(TARGET_BIN)
 
 .PHONEY : uninstall
 uninstall:
-        @echo ""
-        @echo "Un-installing $(APP) from target filesystem..."
-        @-rm -rf $(TARGET_BIN)/$(APP)  
+    @echo ""
+    @echo "Un-installing $(APP) from target filesystem..."
+    @-rm -rf $(TARGET_BIN)/$(APP)  
         
 .PHONEY : distclean
 distclean:
-        @echo ""
-        @echo "Cleaning Everything $(APP)..."
-        @rm -rf $(BUILD_DIR)
-        @echo "DONE"
+    @echo ""
+    @echo "Cleaning Everything $(APP)..."
+    @rm -rf $(BUILD_DIR)
+    @echo "DONE"
 
 vpath %.cpp $(SRC_DIR)
 vpath %.o $(OBJ_DIR)
