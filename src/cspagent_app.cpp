@@ -19,6 +19,7 @@
  *
  *
  ***********************************************************************/
+#include <uninstd.h>
 #include "cspagent_app.h"
 
 AgentApplication::AgentApplication()
