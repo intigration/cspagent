@@ -21,6 +21,7 @@
 #ifndef _CSPBOX_CONF_APP_H_
 #define _CSPBOX_CONF_APP_H_
 
+#include <memory>
 #include <cspeappsdk/cspeappagent/appagent.h>
 
 class AgentApplication {
@@ -28,8 +29,14 @@ public:
     AgentApplication();
     ~AgentApplication();
     bool initialize();
+    void log(const std::string &msg);
+
+    // CSP Application Agent Callback Handlers
+    CSP_VOID initializeResponse(const InitResponse &res);
+private:
 public:
-    cspeapps::sdk::AppAgent *AGENT;
+    std::unique_ptr<cspeapps::sdk::AppAgent> AGENT;
+    volatile bool isRunning;
 };
 
 #endif /* _CSPBOX_CONF_APP_H_ */

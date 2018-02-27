@@ -19,30 +19,41 @@
  *
  *
  ***********************************************************************/
+#include <functional>
+#include <iostream>
+
+#include <ctype.h>
+#include <signal.h>
 #include <unistd.h>
+
 #include "cspagent_app.h"
 
-AgentApplication::AgentApplication()
+AgentApplication::AgentApplication() : AGENT(nullptr), isRunning(true)
 {
 
 }
 
 AgentApplication::~AgentApplication()
 {
-
+    isRunning = false;
 }
 
 bool AgentApplication::initialize()
 {
-   this->AGENT = new cspeapps::sdk::AppAgent();
+   this->AGENT = std::unique_ptr<cspeapps::sdk::AppAgent>(new cspeapps::sdk::AppAgent());
+   this->AGENT->initializeAgent(std::bind(&AgentApplication::initializeResponse, this, std::placeholders::_1));
 }
 
-int main()
+void AgentApplication::log(const std::string &msg)
 {
-   AgentApplication APP;
-   APP.initialize();
-   APP.AGENT->initializeAgent();
-   usleep(10000000);
+    std::cout << "[CSPAGENT-HELLO] : " << msg << std::endl;
+}
 
-   return 0;
+CSP_VOID AgentApplication::initializeResponse(const InitResponse &res)
+{
+    if ( res.status ) {
+        log("Initialized Successfully");
+    } else {
+        log("Initialization Failed");
+    }
 }

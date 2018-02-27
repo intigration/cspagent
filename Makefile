@@ -9,13 +9,13 @@ include ./Makefile.variables
 CXXFLAGS	+= -fPIC -std=c++11
 APP			 = cspagent_hello 
 
-LDFLAGS +=	-L$(SYSROOT)/usr/lib				                        \
-			-L$(SYSROOT)/lib					                        \
-            -L$(SYSROOT)/usr/local/mgc/lib -lcspeappagent -lcspsdkutils \
-            -lcspthread -lcspboxparser -lcspboxmqtt -luuid              \
+LDFLAGS +=	-L$(SYSROOT)/usr/lib				          \
+			-L$(SYSROOT)/lib					          \
+            -L$(SYSROOT)/usr/local/mgc/lib -lcspeappagent \
 			-Wl,-rpath=/usr/local/mgc/lib
 										  
-OBJECTS	  += $(OBJ_DIR)/cspagent_app.o
+OBJECTS	  += $(OBJ_DIR)/cspagent_app.o          \
+             $(OBJ_DIR)/main.o
 
 INCLUDES  += -Iinc								\
 			 -I$(SYSROOT)/usr/include			\
