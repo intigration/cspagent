@@ -41,7 +41,7 @@ AgentApplication::~AgentApplication()
 bool AgentApplication::initialize()
 {
    this->AGENT = std::unique_ptr<cspeapps::sdk::AppAgent>(new cspeapps::sdk::AppAgent());
-   this->AGENT->initializeAgent(std::bind(&AgentApplication::initializeResponse, this, std::placeholders::_1));
+   this->AGENT->Initialize(std::bind(&AgentApplication::initializeResponse, this, std::placeholders::_1));
 }
 
 void AgentApplication::log(const std::string &msg)
