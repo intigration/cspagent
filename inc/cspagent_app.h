@@ -33,6 +33,7 @@ public:
 
     // CSP Application Agent Callback Handlers
     CSP_VOID initializeResponse(const InitResponse &res);
+    CSP_VOID getConfigResponse(const BackendResponse &res);
 private:
 public:
     std::unique_ptr<cspeapps::sdk::AppAgent> AGENT;

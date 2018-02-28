@@ -53,7 +53,15 @@ CSP_VOID AgentApplication::initializeResponse(const InitResponse &res)
 {
     if ( res.status ) {
         log("Initialized Successfully");
+        log("Getting Application Configuration from BE");
+        this->AGENT->GetConfiguration(std::bind(&AgentApplication::getConfigResponse, this, std::placeholders::_1));
     } else {
         log("Initialization Failed");
     }
+}
+CSP_VOID AgentApplication::getConfigResponse(const BackendResponse &res)
+{
+    log("GetConfiguration Response from CSP Platform BE");
+    log("Response = [" + res.response + "]");
+    log("GetConfiguration Response End");
 }
