@@ -60,15 +60,24 @@ CSP_VOID AgentApplication::initializeResponse(const INIT_RESPONSE &res)
         log("Initialization Failed");
     }
 }
-CSP_VOID AgentApplication::getConfigResponse(cspeapps::sdk::AppConfig &config)
+CSP_VOID AgentApplication::getConfigResponse(cspeapps::sdk::AppConfig config)
 {
-    log("GetConfiguration Response from CSP Platform BE");
-    CSP_STRING config_str;
-    config.ToString(config_str);
-    log("Response = [" + config_str + "]");
-    log("GetConfiguration Response End");
+    log("Received configuration from CSP Platform BE");
+    CONFIG.reset();
+    CONFIG = std::unique_ptr<cspeapps::sdk::AppConfig>(new cspeapps::sdk::AppConfig(config));
+    // Apply the new value
+    log("Applying requested configuration");
+    print_interval = atoi(CONFIG->GetRequestedValue("hello_interval").c_str());
+
+    // Now set the new current value
+    log("Setting new current value");
+    CONFIG->SetCurrentValue("hello_interval", std::to_string(print_interval), "new value applied");
+
+    // Report back newly applied value
+    log("Reporting back newly applied configuration");
+    this->AGENT->ReportConfiguration(*CONFIG, nullptr);
 }
-CSP_VOID AgentApplication::beSignallingRequest(cspeapps::sdk::AppSignal &signal)
+CSP_VOID AgentApplication::beSignallingRequest(cspeapps::sdk::AppSignal signal)
 {
     log("Received a signal from BE");
     log("Signal Job Id = [" + signal.GetJobId() + "]");

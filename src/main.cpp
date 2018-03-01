@@ -76,12 +76,14 @@ void registerSignals(void)
 void signalled(int signal)
 {
 	if ( application ) {
+        std::cout << "Stopping Application...\n";
 		application->isRunning = false;
 	}
 }
 void cleanExit(void)
 {
 	if ( application ) {
+        std::cout << "Stopping Application...\n";
 		application->isRunning = false;
 	}
 }

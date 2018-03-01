@@ -34,11 +34,14 @@ public:
 
     // CSP Application Agent Callback Handlers
     CSP_VOID initializeResponse(const INIT_RESPONSE &res);
-    CSP_VOID getConfigResponse(cspeapps::sdk::AppConfig &config);
-    CSP_VOID beSignallingRequest(cspeapps::sdk::AppSignal &signal);
+    CSP_VOID getConfigResponse(cspeapps::sdk::AppConfig config);
+    CSP_VOID beSignallingRequest(cspeapps::sdk::AppSignal signal);
 private:
+    CSP_VOID printBanner();
 public:
     std::unique_ptr<cspeapps::sdk::AppAgent> AGENT;
+    std::unique_ptr<cspeapps::sdk::AppConfig> CONFIG;
+    volatile int print_interval;
     volatile bool isRunning;
 };
 
