@@ -23,6 +23,7 @@
 
 #include <memory>
 #include <cspeappsdk/cspeappagent/appagent.h>
+#include <cspeappsdk/cspeappagent/appconfig.h>
 
 class AgentApplication {
 public:
@@ -32,8 +33,9 @@ public:
     void log(const std::string &msg);
 
     // CSP Application Agent Callback Handlers
-    CSP_VOID initializeResponse(const InitResponse &res);
-    CSP_VOID getConfigResponse(const BackendResponse &res);
+    CSP_VOID initializeResponse(const INIT_RESPONSE &res);
+    CSP_VOID getConfigResponse(cspeapps::sdk::AppConfig &config);
+    CSP_VOID beSignallingRequest(cspeapps::sdk::AppSignal &signal);
 private:
 public:
     std::unique_ptr<cspeapps::sdk::AppAgent> AGENT;
