@@ -22,6 +22,7 @@
 #define _CSPBOX_CONF_APP_H_
 
 #include <memory>
+#include <thread>
 #include <cspeappsdk/cspeappagent/appagent.h>
 #include <cspeappsdk/cspeappagent/appconfig.h>
 
@@ -38,11 +39,16 @@ public:
     CSP_VOID beSignallingRequest(cspeapps::sdk::AppSignal signal);
 private:
     CSP_VOID printBanner();
+    CSP_VOID print(const CSP_STRING &msg);
 public:
     std::unique_ptr<cspeapps::sdk::AppAgent> AGENT;
     std::unique_ptr<cspeapps::sdk::AppConfig> CONFIG;
+    std::unique_ptr<std::thread> _bannerPrinter;
+    CSP_STRING _lastJobId;
     volatile int print_interval;
     volatile bool isRunning;
+private:
+    static const CSP_STRING HELLO_INTERVAL_PARAM_TAG; 
 };
 
 #endif /* _CSPBOX_CONF_APP_H_ */

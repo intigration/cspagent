@@ -19,8 +19,12 @@
  *
  *
  ***********************************************************************/
+#include <ctime>
 #include <functional>
+#include <iomanip>
 #include <iostream>
+#include <sstream>
+#include <thread>
 
 #include <ctype.h>
 #include <signal.h>
@@ -28,7 +32,10 @@
 
 #include "cspagent_app.h"
 
-AgentApplication::AgentApplication() : AGENT(nullptr), isRunning(true)
+const CSP_STRING AgentApplication::HELLO_INTERVAL_PARAM_TAG = "hello_interval"; 
+
+AgentApplication::AgentApplication() : AGENT(nullptr), 
+    _bannerPrinter(nullptr), _lastJobId(""), print_interval(10), isRunning(true) 
 {
 
 }
@@ -53,8 +60,8 @@ void AgentApplication::log(const std::string &msg)
 CSP_VOID AgentApplication::initializeResponse(const INIT_RESPONSE &res)
 {
     if ( res.status ) {
-        log("Initialized Successfully");
-        log("Getting Application Configuration from BE");
+        log("Agent initialized successfully");
+        log("Getting Application Configuration from CSP Platform BE");
         this->AGENT->GetConfiguration(std::bind(&AgentApplication::getConfigResponse, this, std::placeholders::_1));
     } else {
         log("Initialization Failed");
@@ -67,24 +74,70 @@ CSP_VOID AgentApplication::getConfigResponse(cspeapps::sdk::AppConfig config)
     CONFIG = std::unique_ptr<cspeapps::sdk::AppConfig>(new cspeapps::sdk::AppConfig(config));
     // Apply the new value
     log("Applying requested configuration");
-    print_interval = atoi(CONFIG->GetRequestedValue("hello_interval").c_str());
+    CSP_STRING reqVal = CONFIG->GetRequestedValue(HELLO_INTERVAL_PARAM_TAG);
+    CSP_STRING curVal = CONFIG->GetCurrentValue(HELLO_INTERVAL_PARAM_TAG);
+
+    // If requested value is changed, there will be a value, otherwise we will
+    // use the current value.
+    if ( reqVal.length() > 0 ) {
+        print_interval = atoi(reqVal.c_str());
+    } else {
+        print_interval = atoi(curVal.c_str());
+    }
+
+    // Start our worker thread here.
+    if ( !_bannerPrinter ) {
+        _bannerPrinter = std::unique_ptr<std::thread>(new std::thread(std::bind(&AgentApplication::printBanner, this)));
+    }
 
     // Now set the new current value
     log("Setting new current value");
-    CONFIG->SetCurrentValue("hello_interval", std::to_string(print_interval), "new value applied");
+    CONFIG->SetCurrentValue(HELLO_INTERVAL_PARAM_TAG, std::to_string(print_interval), "new value applied");
 
     // Report back newly applied value
     log("Reporting back newly applied configuration");
     this->AGENT->ReportConfiguration(*CONFIG, nullptr);
+
+    // Check if we have updated our configuration as part of BE Signal
+    if ( _lastJobId.length() > 0 ) {
+        BE_REQUEST_STATUS reqStatus;
+        reqStatus.jobid = _lastJobId;
+        reqStatus.job_status = REQ_STATUS_CODE::SUCCESS;
+        _lastJobId = "";
+
+        if ( this->AGENT->ReportRequestStatus(reqStatus).status ) {
+            log("Request [" + reqStatus.jobid + "] status reported successfully");
+        } else {
+            log("Request [" + reqStatus.jobid + "] status failed to report");
+        }
+    }
 }
 CSP_VOID AgentApplication::beSignallingRequest(cspeapps::sdk::AppSignal signal)
 {
     log("Received a signal from BE");
-    log("Signal Job Id = [" + signal.GetJobId() + "]");
-    log("Signal Operation = [" + signal.GetRequestedOperation() + "]");
-    cspeapps::sdk::AppSignal::SIG_OP_PARAMS op_params = signal.GetOperationParams();
-    for ( auto param : op_params ) {
-        log("Operation Param Key = " + param.first + " Value = " + param.second);
+    _lastJobId = signal.GetJobId();
+    if ( signal.GetRequestedOperation() == "update_configuration" ) {
+        // This operation does not have any parameters, so we are just taking
+        // appropriate action to service this request
+        this->AGENT->GetConfiguration(std::bind(&AgentApplication::getConfigResponse, this, std::placeholders::_1));
     }
-    log("Operation Parameters Complete");
+    log("Signal handling completed");
+}
+CSP_VOID AgentApplication::printBanner()
+{
+    log("Starting Banner Printing");
+    log("Printing Interval = " + std::to_string(print_interval));
+    while ( isRunning ) {
+        print("Hello World from CSP Agent Application");
+        std::this_thread::sleep_for(std::chrono::seconds(print_interval));
+    }
+    log("Exiting Banner Printing");
+}
+CSP_VOID AgentApplication::print(const CSP_STRING &msg)
+{
+    std::time_t now = std::time(nullptr);
+    std::stringstream _time_ss;
+    _time_ss << "[" << std::put_time(std::localtime(&now), "%c") << "]";
+    CSP_STRING final_message = _time_ss.str() + " " + msg;
+    log(final_message);
 }

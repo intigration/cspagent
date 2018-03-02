@@ -12,7 +12,7 @@ APP			 = cspagent_hello
 LDFLAGS +=	-L$(SYSROOT)/usr/lib				          \
 			-L$(SYSROOT)/lib					          \
             -L$(SYSROOT)/usr/local/mgc/lib -lcspeappagent \
-            -lboost_system                                \
+            -lboost_system -pthread                       \
 			-Wl,-rpath=/usr/local/mgc/lib
 										  
 OBJECTS	  += $(OBJ_DIR)/cspagent_app.o          \
