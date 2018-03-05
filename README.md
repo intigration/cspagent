@@ -51,15 +51,15 @@ reported the CSP Platform BE will move the new Requested Value to the Current Va
 CSP Application Agent SDK will be installed using CSP Embedded Managed Application SDK. The SDK will
 take care of making Agent SDK part of the application runtime image. 
 
-Includes = -I/usr/local/mgc/include
-Library  = -L/usr/local/mgc/lib -lcspeappagent -lboost_system
+    Includes = -I/usr/local/mgc/include
+    Library  = -L/usr/local/mgc/lib -lcspeappagent -lboost_system
 
 ## Header Files 
 
-#include <cspeappsdk/cspeappagent/appagent.h>
-#include <cspeappsdk/cspeappagent/appconfig.h>
-#include <cspeappsdk/cspeappagent/apperror.h>
-#include <cspeappsdk/cspeappagent/appsignal.h>
+    #include <cspeappsdk/cspeappagent/appagent.h>
+    #include <cspeappsdk/cspeappagent/appconfig.h>
+    #include <cspeappsdk/cspeappagent/apperror.h>
+    #include <cspeappsdk/cspeappagent/appsignal.h>
 
 ## Classes 
 
@@ -99,12 +99,12 @@ print a "Hello World" banner on the standard output with an interval that can be
 CSP Platform Application Portal. This application is available on the CSP Application Store with following
 details
 
-Name: Hello CSP Embedded Managed Application Agent
-Image: sample-cspagent-hello:1.0
-Type: Managed
+    Name: Hello CSP Embedded Managed Application Agent
+    Image: sample-cspagent-hello:1.0
+    Type: Managed
 
-Managed Application Parameters:
-    Greetings Message Interval: Default Value (1)
+    Managed Application Parameters:
+        Greetings Message Interval: Default Value (1)
 
 # Usage
 Once application is deployed and started, following command when issued on the CSP Gateway Device 
