@@ -23,14 +23,14 @@ to have an CSP Application Agent.
 An ideal workflow implemented by the application for CSP Application Agent should be 
 
 
-                                            Update Configuration Signal
-                                                         |
-                                                         |
-                                                         V
-------------> Application Start ----> Initialize Agent ----> Get Configuration ----
-                                                                                  |
-                                                                                  |
-<--- Do Application Work <---- Report Configuration <---- Apply Configuration <---V
+                                                Update Configuration Signal
+                                                             |
+                                                             |
+                                                             V
+    ------------> Application Start ----> Initialize Agent ----> Get Configuration ----
+                                                                                      |
+                                                                                      |
+    <--- Do Application Work <---- Report Configuration <---- Apply Configuration <---V
 
 CSP Application Agent SDK Provide different classes and interfaces to execute above mentioned workflow.
 
@@ -67,20 +67,20 @@ AppAgent
 
 This is the primary class to provide the above mentioned workflow. Important interfaces of the class are
 
-AppAgent::Initialize: Initializes the application agent. This should be the first step
-AppAgent::GetConfiguration: Get application configuration from the CSP Platform BE
-AppAgent::ReportConfiguration: Report application configuration to cSP Platform BE
-AppAgent::RegisterBESignalCallback: Register BE signal handler callback to handle CSP Platform BE Signals
-AppAgent::ReportRequestStatus: Report the status of BE Request received in BE signal.
+    AppAgent::Initialize: Initializes the application agent. This should be the first step
+    AppAgent::GetConfiguration: Get application configuration from the CSP Platform BE
+    AppAgent::ReportConfiguration: Report application configuration to cSP Platform BE
+    AppAgent::RegisterBESignalCallback: Register BE signal handler callback to handle CSP Platform BE Signals
+    AppAgent::ReportRequestStatus: Report the status of BE Request received in BE signal.
 
 AppConfig
 
 This class represent the application configuration it has received from CSP Platform BE as response to
 AppAgent::GetConfiguration API call. Important interfaces of the class are
 
-AppConfig::GetRequestedValue: Get the requested value
-AppConfig::GetCurrentValue: Get the current value
-AppConfig::SetCurrentValue: Set the current value
+    AppConfig::GetRequestedValue: Get the requested value
+    AppConfig::GetCurrentValue: Get the current value
+    AppConfig::SetCurrentValue: Set the current value
 
 AppSignal
 
@@ -88,9 +88,9 @@ This class represent the incoming CSP Platform BE Signal for the application. Th
 in nature so to handle this signal, the application should provide a handler callback to the agent as soon
 as it is initialized.
 
-AppSignal::GetJobId: Get the job id of the incoming signal. This job id will be used while reporting the
-status of the operation
-AppSignal::GetRequestedOperation: Get the operation requested by CSP Platform BE in the incoming signal.
+    AppSignal::GetJobId: Get the job id of the incoming signal. This job id will be used while reporting the
+                         status of the operation
+    AppSignal::GetRequestedOperation: Get the operation requested by CSP Platform BE in the incoming signal.
 
 ## CSP Agent Hello
 
