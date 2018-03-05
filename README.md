@@ -1,45 +1,115 @@
-**Edit a file, create a new file, and clone from Bitbucket in under 2 minutes**
+**Introduction**
 
-When you're done, you can delete the content in this README and update the file with details for others getting started with your repository.
+CSP Embedded Managed Applications are application which are executing on CSP Gateway Device and can be
+managed from CSP Platform Application Portal. There are two types of management operations that can be
+performed on an application
 
-*We recommend that you open this README in another tab as you perform the tasks below. You can [watch our video](https://youtu.be/0ocf7u76WSo) for a full demo of all the steps in this tutorial. Open the video in a new tab to avoid leaving Bitbucket.*
+    1) Container Management Operation: These are the operations which defines the life cycle of the 
+       application object. Those include deploying an application on a gateway device, starting an
+       application, stopping an application and so on.
 
----
+    2) Application Management Operations: These are the operations of the management of the application
+       itself. Example include the change of some internal parameter of the application, or performing 
+       some operation by the application and so on.
 
-## Edit a file
+Every CSP Embedded Managed Application will support "Container Management Operations" by default, such
+an application will be called "Unmanaged Application" but any CSP Embedded Managed Application can 
+support "Application Management Operations", such an application will be called "Managed Application". 
 
-You’ll start by editing this README file to learn how to edit a file in Bitbucket.
+Supporting the Application Managed Operation will require some additional support to be added in the 
+application using the CSP Embedded Managed Application Agent SDK. An application using this SDK is said
+to have an CSP Application Agent. 
 
-1. Click **Source** on the left side.
-2. Click the README.md link from the list of files.
-3. Click the **Edit** button.
-4. Delete the following text: *Delete this line to make a change to the README from Bitbucket.*
-5. After making your change, click **Commit** and then **Commit** again in the dialog. The commit page will open and you’ll see the change you just made.
-6. Go back to the **Source** page.
+An ideal workflow implemented by the application for CSP Application Agent should be 
 
----
 
-## Create a file
+                                            Update Configuration Signal
+                                                         |
+                                                         |
+                                                         V
+------------> Application Start ----> Initialize Agent ----> Get Configuration ----
+                                                                                  |
+                                                                                  |
+<--- Do Application Work <---- Report Configuration <---- Apply Configuration <---V
 
-Next, you’ll add a new file to this repository.
+CSP Application Agent SDK Provide different classes and interfaces to execute above mentioned workflow.
 
-1. Click the **New file** button at the top of the **Source** page.
-2. Give the file a filename of **contributors.txt**.
-3. Enter your name in the empty file space.
-4. Click **Commit** and then **Commit** again in the dialog.
-5. Go back to the **Source** page.
+## Application Configuration. 
 
-Before you move on, go ahead and explore the repository. You've already seen the **Source** page, but check out the **Commits**, **Branches**, and **Settings** pages.
+CSP Platform BE tries to ensure that the application configuration object at
+the CSP Platform BE and the application itself is always in sync. To ensure this, BE uses the concept of
+Current Value & Requested Value. Whenever some value of any application parameter changes from the BE
+using CSP Platform Application Portal, this change will be shown as Requested Value. The Current Value
+represent the currently used value by the actual application. When the user pushes this new value to the
+application, the application get this new value as Requested Value. The application will apply the newly
+Requested Value. Once it is applied successfully (or even not), the new value will becomes the Current Value
+of the application. The application then will report this new Current Value to CSP Platform BE. Once 
+reported the CSP Platform BE will move the new Requested Value to the Current Value.
 
----
 
-## Clone a repository
+## Seting Up
+CSP Application Agent SDK will be installed using CSP Embedded Managed Application SDK. The SDK will
+take care of making Agent SDK part of the application runtime image. 
 
-Use these steps to clone from SourceTree, our client for using the repository command-line free. Cloning allows you to work on your files locally. If you don't yet have SourceTree, [download and install first](https://www.sourcetreeapp.com/). If you prefer to clone from the command line, see [Clone a repository](https://confluence.atlassian.com/x/4whODQ).
+Includes = -I/usr/local/mgc/include
+Library  = -L/usr/local/mgc/lib -lcspeappagent -lboost_system
 
-1. You’ll see the clone button under the **Source** heading. Click that button.
-2. Now click **Check out in SourceTree**. You may need to create a SourceTree account or log in.
-3. When you see the **Clone New** dialog in SourceTree, update the destination path and name if you’d like to and then click **Clone**.
-4. Open the directory you just created to see your repository’s files.
+## Header Files 
 
-Now that you're more familiar with your Bitbucket repository, go ahead and add a new file locally. You can [push your change back to Bitbucket with SourceTree](https://confluence.atlassian.com/x/iqyBMg), or you can [add, commit,](https://confluence.atlassian.com/x/8QhODQ) and [push from the command line](https://confluence.atlassian.com/x/NQ0zDQ).
+#include <cspeappsdk/cspeappagent/appagent.h>
+#include <cspeappsdk/cspeappagent/appconfig.h>
+#include <cspeappsdk/cspeappagent/apperror.h>
+#include <cspeappsdk/cspeappagent/appsignal.h>
+
+## Classes 
+
+AppAgent
+
+This is the primary class to provide the above mentioned workflow. Important interfaces of the class are
+
+AppAgent::Initialize: Initializes the application agent. This should be the first step
+AppAgent::GetConfiguration: Get application configuration from the CSP Platform BE
+AppAgent::ReportConfiguration: Report application configuration to cSP Platform BE
+AppAgent::RegisterBESignalCallback: Register BE signal handler callback to handle CSP Platform BE Signals
+AppAgent::ReportRequestStatus: Report the status of BE Request received in BE signal.
+
+AppConfig
+
+This class represent the application configuration it has received from CSP Platform BE as response to
+AppAgent::GetConfiguration API call. Important interfaces of the class are
+
+AppConfig::GetRequestedValue: Get the requested value
+AppConfig::GetCurrentValue: Get the current value
+AppConfig::SetCurrentValue: Set the current value
+
+AppSignal
+
+This class represent the incoming CSP Platform BE Signal for the application. This signal is asynchronous
+in nature so to handle this signal, the application should provide a handler callback to the agent as soon
+as it is initialized.
+
+AppSignal::GetJobId: Get the job id of the incoming signal. This job id will be used while reporting the
+status of the operation
+AppSignal::GetRequestedOperation: Get the operation requested by CSP Platform BE in the incoming signal.
+
+## CSP Agent Hello
+
+CSP Agent Hello is a sample application to demonstrate the use of CSP Agent SDK. This application will 
+print a "Hello World" banner on the standard output with an interval that can be managed by the 
+CSP Platform Application Portal. This application is available on the CSP Application Store with following
+details
+
+Name: Hello CSP Embedded Managed Application Agent
+Image: sample-cspagent-hello:1.0
+Type: Managed
+
+Managed Application Parameters:
+    Greetings Message Interval: Default Value (1)
+
+# Usage
+Once application is deployed and started, following command when issued on the CSP Gateway Device 
+will show the standard output of the application where you can notice the Hello banner printed by 
+the application along with timestamp. Change the print interval from CSP Platform Application portal
+to notice the change in the banner printing interval.
+
+    docker logs <container_id>

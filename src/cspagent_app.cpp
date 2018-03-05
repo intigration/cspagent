@@ -30,8 +30,11 @@
 #include <signal.h>
 #include <unistd.h>
 
+#include <cspeappsdk/cspeappagent/apperror.h>
 #include "cspagent_app.h"
 
+// hello_interval tag is the managed application parameter tag given while creating
+// the application metadata by the Application Developer using the CSP Platform Application Portal
 const CSP_STRING AgentApplication::HELLO_INTERVAL_PARAM_TAG = "hello_interval"; 
 
 AgentApplication::AgentApplication() : AGENT(nullptr), 
@@ -47,9 +50,17 @@ AgentApplication::~AgentApplication()
 
 bool AgentApplication::initialize()
 {
-   this->AGENT = std::unique_ptr<cspeapps::sdk::AppAgent>(new cspeapps::sdk::AppAgent());
-   this->AGENT->RegisterBESignalCallback(std::bind(&AgentApplication::beSignallingRequest, this, std::placeholders::_1));
-   this->AGENT->Initialize(std::bind(&AgentApplication::initializeResponse, this, std::placeholders::_1));
+    // AppAgent object is the primary interface to all the workflow operations 
+    // performed by the CSP Agent
+    this->AGENT = std::unique_ptr<cspeapps::sdk::AppAgent>(new cspeapps::sdk::AppAgent());
+
+    // Before even initializing the Agent, we will register the Signalling Callback because
+    // the application will start to receive BE signals as soon as the Agent is initialized
+    // to make sure we do not miss any BE signal, we will register our handler now.
+    this->AGENT->RegisterBESignalCallback(std::bind(&AgentApplication::beSignallingRequest, this, std::placeholders::_1));
+
+    // Initialize the agent. 
+    this->AGENT->Initialize(std::bind(&AgentApplication::initializeResponse, this, std::placeholders::_1));
 }
 
 void AgentApplication::log(const std::string &msg)
@@ -62,6 +73,9 @@ CSP_VOID AgentApplication::initializeResponse(const INIT_RESPONSE &res)
     if ( res.status ) {
         log("Agent initialized successfully");
         log("Getting Application Configuration from CSP Platform BE");
+
+        // Once we are initialized successfully, our first task is to get the configuration of the application
+        // from the BE so that we can start our application. 
         this->AGENT->GetConfiguration(std::bind(&AgentApplication::getConfigResponse, this, std::placeholders::_1));
     } else {
         log("Initialization Failed");
@@ -70,12 +84,16 @@ CSP_VOID AgentApplication::initializeResponse(const INIT_RESPONSE &res)
 CSP_VOID AgentApplication::getConfigResponse(cspeapps::sdk::AppConfig config)
 {
     log("Received configuration from CSP Platform BE");
+    // We will keep a copy of the Configuration object because we may need this while running the application.
     CONFIG.reset();
     CONFIG = std::unique_ptr<cspeapps::sdk::AppConfig>(new cspeapps::sdk::AppConfig(config));
     // Apply the new value
     log("Applying requested configuration");
     CSP_STRING reqVal = CONFIG->GetRequestedValue(HELLO_INTERVAL_PARAM_TAG);
     CSP_STRING curVal = CONFIG->GetCurrentValue(HELLO_INTERVAL_PARAM_TAG);
+
+    log(" =========> Requested Value = " + reqVal);
+    log(" =========> Current Value   = " + curVal);
 
     // If requested value is changed, there will be a value, otherwise we will
     // use the current value.
@@ -85,12 +103,14 @@ CSP_VOID AgentApplication::getConfigResponse(cspeapps::sdk::AppConfig config)
         print_interval = atoi(curVal.c_str());
     }
 
-    // Start our worker thread here.
+    // Application specific logic. Start our worker thread here.
     if ( !_bannerPrinter ) {
         _bannerPrinter = std::unique_ptr<std::thread>(new std::thread(std::bind(&AgentApplication::printBanner, this)));
     }
 
-    // Now set the new current value
+    // Now set the new current value. We will ensure to read the current value of any given parameter
+    // from its original source (instead of just using the RequestedValue) to ensure the exact value
+    // being used by the application. This will make sure correct reporting of current value at the BE
     log("Setting new current value");
     CONFIG->SetCurrentValue(HELLO_INTERVAL_PARAM_TAG, std::to_string(print_interval), "new value applied");
 
@@ -98,14 +118,15 @@ CSP_VOID AgentApplication::getConfigResponse(cspeapps::sdk::AppConfig config)
     log("Reporting back newly applied configuration");
     this->AGENT->ReportConfiguration(*CONFIG, nullptr);
 
-    // Check if we have updated our configuration as part of BE Signal
+    // Check if we have updated our configuration as part of BE Signal we will report
+    // back the status of the update_configuration signal.
     if ( _lastJobId.length() > 0 ) {
         BE_REQUEST_STATUS reqStatus;
         reqStatus.jobid = _lastJobId;
         reqStatus.job_status = REQ_STATUS_CODE::SUCCESS;
         _lastJobId = "";
 
-        if ( this->AGENT->ReportRequestStatus(reqStatus).status ) {
+        if ( this->AGENT->ReportRequestStatus(reqStatus) ) {
             log("Request [" + reqStatus.jobid + "] status reported successfully");
         } else {
             log("Request [" + reqStatus.jobid + "] status failed to report");
@@ -114,11 +135,16 @@ CSP_VOID AgentApplication::getConfigResponse(cspeapps::sdk::AppConfig config)
 }
 CSP_VOID AgentApplication::beSignallingRequest(cspeapps::sdk::AppSignal signal)
 {
+    // CSP Platform BE Signal handler
     log("Received a signal from BE");
     _lastJobId = signal.GetJobId();
+
+    // Currently we only have one operation as implemented below.
     if ( signal.GetRequestedOperation() == "update_configuration" ) {
         // This operation does not have any parameters, so we are just taking
         // appropriate action to service this request
+        // Since the signal is asking us to update the configuration, so we will 
+        // just call the GetConfiguration API again.
         this->AGENT->GetConfiguration(std::bind(&AgentApplication::getConfigResponse, this, std::placeholders::_1));
     }
     log("Signal handling completed");
