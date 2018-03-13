@@ -49,6 +49,7 @@ public:
     volatile bool isRunning;
 private:
     static const CSP_STRING HELLO_INTERVAL_PARAM_TAG; 
+    static const CSP_STRING PUBSUB_BIND_PARAM_TAG; 
 };
 
 #endif /* _CSPBOX_CONF_APP_H_ */

@@ -36,6 +36,7 @@
 // hello_interval tag is the managed application parameter tag given while creating
 // the application metadata by the Application Developer using the CSP Platform Application Portal
 const CSP_STRING AgentApplication::HELLO_INTERVAL_PARAM_TAG = "hello_interval"; 
+const CSP_STRING AgentApplication::PUBSUB_BIND_PARAM_TAG = "pubsub_bind_port"; 
 
 AgentApplication::AgentApplication() : AGENT(nullptr), 
     _bannerPrinter(nullptr), _lastJobId(""), print_interval(10), isRunning(true) 
@@ -92,8 +93,11 @@ CSP_VOID AgentApplication::getConfigResponse(cspeapps::sdk::AppConfig config)
     CSP_STRING reqVal = CONFIG->GetRequestedValue(HELLO_INTERVAL_PARAM_TAG);
     CSP_STRING curVal = CONFIG->GetCurrentValue(HELLO_INTERVAL_PARAM_TAG);
 
-    log(" =========> Requested Value = " + reqVal);
-    log(" =========> Current Value   = " + curVal);
+    CSP_STRING reqValPubSub = CONFIG->GetRequestedValue(PUBSUB_BIND_PARAM_TAG);
+    CSP_STRING curValPubSub = CONFIG->GetCurrentValue(PUBSUB_BIND_PARAM_TAG);
+
+    log("Requested Value = " + reqVal);
+    log("Current Value   = " + curVal);
 
     // If requested value is changed, there will be a value, otherwise we will
     // use the current value.
@@ -102,6 +106,9 @@ CSP_VOID AgentApplication::getConfigResponse(cspeapps::sdk::AppConfig config)
     } else {
         print_interval = atoi(curVal.c_str());
     }
+
+    log("Pubsub Bind Port Requested Value = " + reqValPubSub);
+    log("Pubsub Bind Port Current Value = " + curValPubSub);
 
     // Application specific logic. Start our worker thread here.
     if ( !_bannerPrinter ) {
@@ -145,6 +152,11 @@ CSP_VOID AgentApplication::beSignallingRequest(cspeapps::sdk::AppSignal signal)
         // appropriate action to service this request
         // Since the signal is asking us to update the configuration, so we will 
         // just call the GetConfiguration API again.
+        this->AGENT->GetConfiguration(std::bind(&AgentApplication::getConfigResponse, this, std::placeholders::_1));
+    } else if ( signal.GetRequestedOperation() == "parameter_changed" ) {
+        log("Some subscribed parameter has been changed. Take appropriate action");
+        cspeapps::sdk::AppSignal::SIG_OP_PARAMS sig_params = signal.GetOperationParams();
+        log("Parameter Changed = " + sig_params["parameter_name_1"]);
         this->AGENT->GetConfiguration(std::bind(&AgentApplication::getConfigResponse, this, std::placeholders::_1));
     }
     log("Signal handling completed");
