@@ -46,10 +46,11 @@ public:
     std::unique_ptr<std::thread> _bannerPrinter;
     CSP_STRING _lastJobId;
     volatile int print_interval;
+    volatile int hello_pubsub_1;
     volatile bool isRunning;
 private:
     static const CSP_STRING HELLO_INTERVAL_PARAM_TAG; 
-    static const CSP_STRING PUBSUB_BIND_PARAM_TAG; 
+    static const CSP_STRING HELLO_PUBSUB_1_TAG; 
 };
 
 #endif /* _CSPBOX_CONF_APP_H_ */

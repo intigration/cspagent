@@ -36,7 +36,7 @@
 // hello_interval tag is the managed application parameter tag given while creating
 // the application metadata by the Application Developer using the CSP Platform Application Portal
 const CSP_STRING AgentApplication::HELLO_INTERVAL_PARAM_TAG = "hello_interval"; 
-const CSP_STRING AgentApplication::PUBSUB_BIND_PARAM_TAG = "pubsub_bind_port"; 
+const CSP_STRING AgentApplication::HELLO_PUBSUB_1_TAG = "hello_pubsub_1"; 
 
 AgentApplication::AgentApplication() : AGENT(nullptr), 
     _bannerPrinter(nullptr), _lastJobId(""), print_interval(10), isRunning(true) 
@@ -93,8 +93,8 @@ CSP_VOID AgentApplication::getConfigResponse(cspeapps::sdk::AppConfig config)
     CSP_STRING reqVal = CONFIG->GetRequestedValue(HELLO_INTERVAL_PARAM_TAG);
     CSP_STRING curVal = CONFIG->GetCurrentValue(HELLO_INTERVAL_PARAM_TAG);
 
-    CSP_STRING reqValPubSub = CONFIG->GetRequestedValue(PUBSUB_BIND_PARAM_TAG);
-    CSP_STRING curValPubSub = CONFIG->GetCurrentValue(PUBSUB_BIND_PARAM_TAG);
+    CSP_STRING reqValPubSub = CONFIG->GetRequestedValue(HELLO_PUBSUB_1_TAG);
+    CSP_STRING curValPubSub = CONFIG->GetCurrentValue(HELLO_PUBSUB_1_TAG);
 
     log("Requested Value = " + reqVal);
     log("Current Value   = " + curVal);
@@ -107,8 +107,9 @@ CSP_VOID AgentApplication::getConfigResponse(cspeapps::sdk::AppConfig config)
         print_interval = atoi(curVal.c_str());
     }
 
-    log("Pubsub Bind Port Requested Value = " + reqValPubSub);
-    log("Pubsub Bind Port Current Value = " + curValPubSub);
+    if ( std::to_string(hello_pubsub_1) != reqValPubSub ) {
+        hello_pubsub_1 = atoi(reqValPubSub.c_str());
+    }
 
     // Application specific logic. Start our worker thread here.
     if ( !_bannerPrinter ) {
@@ -120,6 +121,7 @@ CSP_VOID AgentApplication::getConfigResponse(cspeapps::sdk::AppConfig config)
     // being used by the application. This will make sure correct reporting of current value at the BE
     log("Setting new current value");
     CONFIG->SetCurrentValue(HELLO_INTERVAL_PARAM_TAG, std::to_string(print_interval), "new value applied");
+    CONFIG->SetCurrentValue(HELLO_PUBSUB_1_TAG, std::to_string(hello_pubsub_1), "new value applied");
 
     // Report back newly applied value
     log("Reporting back newly applied configuration");
@@ -147,18 +149,41 @@ CSP_VOID AgentApplication::beSignallingRequest(cspeapps::sdk::AppSignal signal)
     _lastJobId = signal.GetJobId();
 
     // Currently we only have one operation as implemented below.
-    if ( signal.GetRequestedOperation() == "update_configuration" ) {
+    std::string operation = signal.GetRequestedOperation();
+    if ( operation == "update_configuration" ) {
         // This operation does not have any parameters, so we are just taking
         // appropriate action to service this request
         // Since the signal is asking us to update the configuration, so we will 
         // just call the GetConfiguration API again.
         this->AGENT->GetConfiguration(std::bind(&AgentApplication::getConfigResponse, this, std::placeholders::_1));
-    } else if ( signal.GetRequestedOperation() == "parameter_changed" ) {
+    } else if ( operation == "parameter_changed" ) {
         log("Some subscribed parameter has been changed. Take appropriate action");
         cspeapps::sdk::AppSignal::SIG_OP_PARAMS sig_params = signal.GetOperationParams();
         log("Parameter Changed = " + sig_params["parameter_name_1"]);
         this->AGENT->GetConfiguration(std::bind(&AgentApplication::getConfigResponse, this, std::placeholders::_1));
-    }
+    } else if ( operation == "parameter_changed_aapp_with_payload" ) {
+        log("P2P Signal received for subscribed parameters");
+        cspeapps::sdk::AppSignal::SIG_PAYLOAD_PARAMS payload_params = signal.GetSignalParametersData();
+        bool report_config = false;
+
+        // We are expecting hello_pubsub_1 value to be changed
+        if ( payload_params.find(HELLO_PUBSUB_1_TAG) != payload_params.end() ) {
+            // Ensure that requested value is different that our current value for this parameter.
+            int temp_val = atoi(payload_params[HELLO_PUBSUB_1_TAG].reqValue.c_str());
+            if ( temp_val != hello_pubsub_1 ) {
+                hello_pubsub_1 = temp_val;
+                CONFIG->SetCurrentValue(HELLO_PUBSUB_1_TAG, std::to_string(hello_pubsub_1), "new value applied");
+                report_config = true;
+            }
+        }
+
+        // We need to make sure we report the comitted value of parameters at once to 
+        // avoid lazy reporting.
+        if ( report_config ) {
+            log("Reporting back newly applied configuration");
+            this->AGENT->ReportConfiguration(*CONFIG, nullptr);
+        }
+    } 
     log("Signal handling completed");
 }
 CSP_VOID AgentApplication::printBanner()
@@ -166,7 +191,7 @@ CSP_VOID AgentApplication::printBanner()
     log("Starting Banner Printing");
     log("Printing Interval = " + std::to_string(print_interval));
     while ( isRunning ) {
-        print("Hello World from CSP Agent Application");
+        print("Hello World from CSP Agent Application. Subscribed Parameter Value = [" + std::to_string(hello_pubsub_1) + "]");
         std::this_thread::sleep_for(std::chrono::seconds(print_interval));
     }
     log("Exiting Banner Printing");
