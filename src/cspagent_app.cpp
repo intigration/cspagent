@@ -35,8 +35,8 @@
 
 // hello_interval tag is the managed application parameter tag given while creating
 // the application metadata by the Application Developer using the CSP Platform Application Portal
-const CSP_STRING AgentApplication::HELLO_INTERVAL_PARAM_TAG = "hello_interval"; 
-const CSP_STRING AgentApplication::HELLO_PUBSUB_1_TAG = "hello_pubsub_1"; 
+const CSP_STRING AgentApplication::HELLO_INTERVAL_PARAM_TAG = "control_settings.hello_interval"; 
+const CSP_STRING AgentApplication::SUBSCRIBED_API_CALL_INTERVAL = "app_subscribed_parameters.api_call_interval"; 
 
 AgentApplication::AgentApplication() : AGENT(nullptr), 
     _bannerPrinter(nullptr), _lastJobId(""), print_interval(10), isRunning(true) 
@@ -93,8 +93,8 @@ CSP_VOID AgentApplication::getConfigResponse(cspeapps::sdk::AppConfig config)
     CSP_STRING reqVal = CONFIG->GetRequestedValue(HELLO_INTERVAL_PARAM_TAG);
     CSP_STRING curVal = CONFIG->GetCurrentValue(HELLO_INTERVAL_PARAM_TAG);
 
-    CSP_STRING reqValPubSub = CONFIG->GetRequestedValue(HELLO_PUBSUB_1_TAG);
-    CSP_STRING curValPubSub = CONFIG->GetCurrentValue(HELLO_PUBSUB_1_TAG);
+    CSP_STRING reqValPubSub = CONFIG->GetRequestedValue(SUBSCRIBED_API_CALL_INTERVAL);
+    CSP_STRING curValPubSub = CONFIG->GetCurrentValue(SUBSCRIBED_API_CALL_INTERVAL);
 
     log("Requested Value = " + reqVal);
     log("Current Value   = " + curVal);
@@ -121,7 +121,7 @@ CSP_VOID AgentApplication::getConfigResponse(cspeapps::sdk::AppConfig config)
     // being used by the application. This will make sure correct reporting of current value at the BE
     log("Setting new current value");
     CONFIG->SetCurrentValue(HELLO_INTERVAL_PARAM_TAG, std::to_string(print_interval), "new value applied");
-    CONFIG->SetCurrentValue(HELLO_PUBSUB_1_TAG, std::to_string(hello_pubsub_1), "new value applied");
+    CONFIG->SetCurrentValue(SUBSCRIBED_API_CALL_INTERVAL, std::to_string(hello_pubsub_1), "new value applied");
 
     // Report back newly applied value
     log("Reporting back newly applied configuration");
@@ -167,12 +167,12 @@ CSP_VOID AgentApplication::beSignallingRequest(cspeapps::sdk::AppSignal signal)
         bool report_config = false;
 
         // We are expecting hello_pubsub_1 value to be changed
-        if ( payload_params.find(HELLO_PUBSUB_1_TAG) != payload_params.end() ) {
+        if ( payload_params.find(SUBSCRIBED_API_CALL_INTERVAL) != payload_params.end() ) {
             // Ensure that requested value is different that our current value for this parameter.
-            int temp_val = atoi(payload_params[HELLO_PUBSUB_1_TAG].reqValue.c_str());
+            int temp_val = atoi(payload_params[SUBSCRIBED_API_CALL_INTERVAL].reqValue.c_str());
             if ( temp_val != hello_pubsub_1 ) {
                 hello_pubsub_1 = temp_val;
-                CONFIG->SetCurrentValue(HELLO_PUBSUB_1_TAG, std::to_string(hello_pubsub_1), "new value applied");
+                CONFIG->SetCurrentValue(SUBSCRIBED_API_CALL_INTERVAL, std::to_string(hello_pubsub_1), "new value applied");
                 report_config = true;
             }
         }

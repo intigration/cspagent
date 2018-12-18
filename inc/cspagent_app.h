@@ -50,7 +50,7 @@ public:
     volatile bool isRunning;
 private:
     static const CSP_STRING HELLO_INTERVAL_PARAM_TAG; 
-    static const CSP_STRING HELLO_PUBSUB_1_TAG; 
+    static const CSP_STRING SUBSCRIBED_API_CALL_INTERVAL; 
 };
 
 #endif /* _CSPBOX_CONF_APP_H_ */
