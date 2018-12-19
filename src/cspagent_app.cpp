@@ -36,7 +36,7 @@
 // hello_interval tag is the managed application parameter tag given while creating
 // the application metadata by the Application Developer using the CSP Platform Application Portal
 const CSP_STRING AgentApplication::HELLO_INTERVAL_PARAM_TAG = "control_settings.hello_interval"; 
-const CSP_STRING AgentApplication::SUBSCRIBED_API_CALL_INTERVAL = "app_subscribed_parameters.api_call_interval"; 
+const CSP_STRING AgentApplication::SUBSCRIBED_API_CALL_INTERVAL_PARAM_TAG = "app_subscribed_parameters.api_call_interval"; 
 
 AgentApplication::AgentApplication() : AGENT(nullptr), 
     _bannerPrinter(nullptr), _lastJobId(""), print_interval(10), isRunning(true) 
@@ -90,25 +90,30 @@ CSP_VOID AgentApplication::getConfigResponse(cspeapps::sdk::AppConfig config)
     CONFIG = std::unique_ptr<cspeapps::sdk::AppConfig>(new cspeapps::sdk::AppConfig(config));
     // Apply the new value
     log("Applying requested configuration");
-    CSP_STRING reqVal = CONFIG->GetRequestedValue(HELLO_INTERVAL_PARAM_TAG);
-    CSP_STRING curVal = CONFIG->GetCurrentValue(HELLO_INTERVAL_PARAM_TAG);
+    CSP_STRING helloIntervalReqVal = CONFIG->GetRequestedValue(HELLO_INTERVAL_PARAM_TAG);
+    CSP_STRING helloIntervalCurVal = CONFIG->GetCurrentValue(HELLO_INTERVAL_PARAM_TAG);
 
-    CSP_STRING reqValPubSub = CONFIG->GetRequestedValue(SUBSCRIBED_API_CALL_INTERVAL);
-    CSP_STRING curValPubSub = CONFIG->GetCurrentValue(SUBSCRIBED_API_CALL_INTERVAL);
+    CSP_STRING apiCallIntervalReqVal = CONFIG->GetRequestedValue(SUBSCRIBED_API_CALL_INTERVAL_PARAM_TAG);
+    CSP_STRING apiCallIntervalCurVal = CONFIG->GetCurrentValue(SUBSCRIBED_API_CALL_INTERVAL_PARAM_TAG);
 
-    log("Requested Value = " + reqVal);
-    log("Current Value   = " + curVal);
+    log("Requested Value of [" + HELLO_INTERVAL_PARAM_TAG + "] = [" + helloIntervalReqVal + "]");
+    log("Current Value of [" + HELLO_INTERVAL_PARAM_TAG + "] = [" + helloIntervalCurVal + "]");
+
+    log("Requested Value of [" + SUBSCRIBED_API_CALL_INTERVAL_PARAM_TAG + "] = [" + apiCallIntervalReqVal + "]");
+    log("Current Value of [" + SUBSCRIBED_API_CALL_INTERVAL_PARAM_TAG + "] = [" + apiCallIntervalCurVal + "]");
 
     // If requested value is changed, there will be a value, otherwise we will
     // use the current value.
-    if ( reqVal.length() > 0 ) {
-        print_interval = atoi(reqVal.c_str());
+    if ( helloIntervalReqVal.length() > 0 ) {
+        print_interval = atoi(helloIntervalReqVal.c_str());
     } else {
-        print_interval = atoi(curVal.c_str());
+        print_interval = atoi(helloIntervalCurVal.c_str());
     }
 
-    if ( std::to_string(hello_pubsub_1) != reqValPubSub ) {
-        hello_pubsub_1 = atoi(reqValPubSub.c_str());
+    if ( apiCallIntervalReqVal.length() > 0 ) {
+        print_interval = atoi(apiCallIntervalReqVal.c_str());
+    } else {
+        print_interval = atoi(apiCallIntervalCurVal.c_str());
     }
 
     // Application specific logic. Start our worker thread here.
@@ -121,7 +126,7 @@ CSP_VOID AgentApplication::getConfigResponse(cspeapps::sdk::AppConfig config)
     // being used by the application. This will make sure correct reporting of current value at the BE
     log("Setting new current value");
     CONFIG->SetCurrentValue(HELLO_INTERVAL_PARAM_TAG, std::to_string(print_interval), "new value applied");
-    CONFIG->SetCurrentValue(SUBSCRIBED_API_CALL_INTERVAL, std::to_string(hello_pubsub_1), "new value applied");
+    CONFIG->SetCurrentValue(SUBSCRIBED_API_CALL_INTERVAL_PARAM_TAG, std::to_string(api_call_interval), "new value applied");
 
     // Report back newly applied value
     log("Reporting back newly applied configuration");
@@ -166,21 +171,18 @@ CSP_VOID AgentApplication::beSignallingRequest(cspeapps::sdk::AppSignal signal)
         cspeapps::sdk::AppSignal::SIG_PAYLOAD_PARAMS payload_params = signal.GetSignalParametersData();
         bool report_config = false;
 
-        // We are expecting hello_pubsub_1 value to be changed
-        if ( payload_params.find(SUBSCRIBED_API_CALL_INTERVAL) != payload_params.end() ) {
+        // We are expecting api_call_interval value to be changed
+        if ( payload_params.find(SUBSCRIBED_API_CALL_INTERVAL_PARAM_TAG) != payload_params.end() ) {
             // Ensure that requested value is different that our current value for this parameter.
-            int temp_val = atoi(payload_params[SUBSCRIBED_API_CALL_INTERVAL].reqValue.c_str());
-            if ( temp_val != hello_pubsub_1 ) {
-                hello_pubsub_1 = temp_val;
-                CONFIG->SetCurrentValue(SUBSCRIBED_API_CALL_INTERVAL, std::to_string(hello_pubsub_1), "new value applied");
-                report_config = true;
-            }
+            api_call_interval = atoi(payload_params[SUBSCRIBED_API_CALL_INTERVAL_PARAM_TAG].reqValue.c_str());
+            CONFIG->SetCurrentValue(SUBSCRIBED_API_CALL_INTERVAL_PARAM_TAG, std::to_string(api_call_interval), "new value applied");
+            report_config = true;
         }
 
         // We need to make sure we report the comitted value of parameters at once to 
         // avoid lazy reporting.
         if ( report_config ) {
-            log("Reporting back newly applied configuration");
+            log("Reporting back newly applied configuration received in P2P Signal");
             this->AGENT->ReportConfiguration(*CONFIG, nullptr);
         }
     } 
@@ -191,7 +193,7 @@ CSP_VOID AgentApplication::printBanner()
     log("Starting Banner Printing");
     log("Printing Interval = " + std::to_string(print_interval));
     while ( isRunning ) {
-        print("Hello World from CSP Agent Application. Subscribed Parameter Value = [" + std::to_string(hello_pubsub_1) + "]");
+        print("Hello World from CSP Agent Application. Subscribed Parameter Value = [" + std::to_string(api_call_interval) + "]");
         std::this_thread::sleep_for(std::chrono::seconds(print_interval));
     }
     log("Exiting Banner Printing");
