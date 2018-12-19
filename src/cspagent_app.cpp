@@ -111,9 +111,9 @@ CSP_VOID AgentApplication::getConfigResponse(cspeapps::sdk::AppConfig config)
     }
 
     if ( apiCallIntervalReqVal.length() > 0 ) {
-        print_interval = atoi(apiCallIntervalReqVal.c_str());
+        api_call_interval = atoi(apiCallIntervalReqVal.c_str());
     } else {
-        print_interval = atoi(apiCallIntervalCurVal.c_str());
+        api_call_interval = atoi(apiCallIntervalCurVal.c_str());
     }
 
     // Application specific logic. Start our worker thread here.
@@ -125,6 +125,8 @@ CSP_VOID AgentApplication::getConfigResponse(cspeapps::sdk::AppConfig config)
     // from its original source (instead of just using the RequestedValue) to ensure the exact value
     // being used by the application. This will make sure correct reporting of current value at the BE
     log("Setting new current value");
+    log("New Current Value of [" + HELLO_INTERVAL_PARAM_TAG + "] = " + std::to_string(print_interval));
+    log("New Current Value of [" + SUBSCRIBED_API_CALL_INTERVAL_PARAM_TAG + "] = " + std::to_string(api_call_interval));
     CONFIG->SetCurrentValue(HELLO_INTERVAL_PARAM_TAG, std::to_string(print_interval), "new value applied");
     CONFIG->SetCurrentValue(SUBSCRIBED_API_CALL_INTERVAL_PARAM_TAG, std::to_string(api_call_interval), "new value applied");
 
