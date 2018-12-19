@@ -104,14 +104,21 @@ CSP_VOID AgentApplication::getConfigResponse(cspeapps::sdk::AppConfig config)
 
     // If requested value is changed, there will be a value, otherwise we will
     // use the current value.
+    bool report_config = false;
     if ( helloIntervalReqVal.length() > 0 ) {
         print_interval = atoi(helloIntervalReqVal.c_str());
+        log("New Current Value of [" + HELLO_INTERVAL_PARAM_TAG + "] = " + std::to_string(print_interval));
+        CONFIG->SetCurrentValue(HELLO_INTERVAL_PARAM_TAG, std::to_string(print_interval), "new value applied");
+        report_config = true;
     } else {
         print_interval = atoi(helloIntervalCurVal.c_str());
     }
 
     if ( apiCallIntervalReqVal.length() > 0 ) {
         api_call_interval = atoi(apiCallIntervalReqVal.c_str());
+        log("New Current Value of [" + SUBSCRIBED_API_CALL_INTERVAL_PARAM_TAG + "] = " + std::to_string(api_call_interval));
+        CONFIG->SetCurrentValue(SUBSCRIBED_API_CALL_INTERVAL_PARAM_TAG, std::to_string(api_call_interval), "new value applied");
+        report_config = true;
     } else {
         api_call_interval = atoi(apiCallIntervalCurVal.c_str());
     }
@@ -124,15 +131,12 @@ CSP_VOID AgentApplication::getConfigResponse(cspeapps::sdk::AppConfig config)
     // Now set the new current value. We will ensure to read the current value of any given parameter
     // from its original source (instead of just using the RequestedValue) to ensure the exact value
     // being used by the application. This will make sure correct reporting of current value at the BE
-    log("Setting new current value");
-    log("New Current Value of [" + HELLO_INTERVAL_PARAM_TAG + "] = " + std::to_string(print_interval));
-    log("New Current Value of [" + SUBSCRIBED_API_CALL_INTERVAL_PARAM_TAG + "] = " + std::to_string(api_call_interval));
-    CONFIG->SetCurrentValue(HELLO_INTERVAL_PARAM_TAG, std::to_string(print_interval), "new value applied");
-    CONFIG->SetCurrentValue(SUBSCRIBED_API_CALL_INTERVAL_PARAM_TAG, std::to_string(api_call_interval), "new value applied");
 
     // Report back newly applied value
-    log("Reporting back newly applied configuration");
-    this->AGENT->ReportConfiguration(*CONFIG, nullptr);
+    if ( report_config ) {
+        log("We have received new values, reporting back newly applied configuration");
+        this->AGENT->ReportConfiguration(*CONFIG, nullptr);
+    }
 
     // Check if we have updated our configuration as part of BE Signal we will report
     // back the status of the update_configuration signal.
