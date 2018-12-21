@@ -181,6 +181,10 @@ CSP_VOID AgentApplication::beSignallingRequest(cspeapps::sdk::AppSignal signal)
         if ( payload_params.find(SUBSCRIBED_API_CALL_INTERVAL_PARAM_TAG) != payload_params.end() ) {
             // Ensure that requested value is different that our current value for this parameter.
             api_call_interval = atoi(payload_params[SUBSCRIBED_API_CALL_INTERVAL_PARAM_TAG].reqValue.c_str());
+            if ( CONFIG == nullptr ) {
+                JsonParser::TreeMap tree;
+                CONFIG = std::unique_ptr<cspeapps::sdk::AppConfig>(new cspeapps::sdk::AppConfig(tree));
+            }
             CONFIG->SetCurrentValue(SUBSCRIBED_API_CALL_INTERVAL_PARAM_TAG, std::to_string(api_call_interval), "new value applied");
             report_config = true;
         }
