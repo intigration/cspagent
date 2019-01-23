@@ -66,7 +66,17 @@ bool AgentApplication::initialize()
 
 void AgentApplication::log(const std::string &msg)
 {
-    std::cout << "[CSPAGENT-HELLO] : " << msg << std::endl;
+    tzset();
+    std::time_t _time = std::time(nullptr);
+    std::tm *_tm = std::localtime(&_time);
+    std::string _stime = "";
+    
+    char _times[64];
+    memset(_times, 0x0, sizeof(_times));
+	if ( std::strftime(_times, sizeof(_times), "%Y-%b-%d %H:%M:%S", _tm) ) {
+		_stime = std::string(_times);
+	}
+    std::cout << _stime << " : [CSPAGENT-HELLO] : " << msg << std::endl;
 }
 
 CSP_VOID AgentApplication::initializeResponse(const INIT_RESPONSE &res)
