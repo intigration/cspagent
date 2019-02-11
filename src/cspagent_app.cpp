@@ -138,7 +138,7 @@ CSP_VOID AgentApplication::getConfigResponse(cspeapps::sdk::AppConfig config)
     // Report back newly applied value
     if ( report_config ) {
         log("We have received new values, reporting back newly applied configuration");
-        this->AGENT->ReportConfiguration(*CONFIG, nullptr);
+        this->AGENT->ReportConfiguration(*CONFIG, nullptr, "", OPERATION_STATE::NO_OP);
     }
 
     // Check if we have updated our configuration as part of BE Signal we will report
@@ -159,7 +159,7 @@ CSP_VOID AgentApplication::getConfigResponse(cspeapps::sdk::AppConfig config)
 CSP_VOID AgentApplication::beSignallingRequest(cspeapps::sdk::AppSignal signal)
 {
     // CSP Platform BE Signal handler
-    log("Received a signal from BE");
+    log("Received DM signal from BE. Operation Id = [" + signal.GetOperationId() + "]");
     _lastJobId = signal.GetJobId();
 
     // Currently we only have one operation as implemented below.
@@ -196,10 +196,10 @@ CSP_VOID AgentApplication::beSignallingRequest(cspeapps::sdk::AppSignal signal)
         // avoid lazy reporting.
         if ( report_config ) {
             log("Reporting back newly applied configuration received in P2P Signal");
-            this->AGENT->ReportConfiguration(*CONFIG, nullptr);
+            this->AGENT->ReportConfiguration(*CONFIG, nullptr, signal.GetOperationId(), OPERATION_STATE::FINISHED);
         }
     } 
-    log("Signal handling completed");
+    log("Signal handling completed for Operation Id = [" + signal.GetOperationId() + "]");
 }
 CSP_VOID AgentApplication::printBanner()
 {
