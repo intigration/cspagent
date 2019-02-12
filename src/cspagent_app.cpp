@@ -80,7 +80,7 @@ CSP_VOID AgentApplication::initializeResponse(const INIT_RESPONSE &res)
 
         // Once we are initialized successfully, our first task is to get the configuration of the application
         // from the BE so that we can start our application. 
-        this->AGENT->GetConfiguration(std::bind(&AgentApplication::getConfigResponse, this, std::placeholders::_1), "", OPERATION_STATE::NO_OP);
+        this->AGENT->GetConfiguration(std::bind(&AgentApplication::getConfigResponse, this, std::placeholders::_1, ""), "", OPERATION_STATE::NO_OP);
     } else {
         log("Initialization Failed");
     }
