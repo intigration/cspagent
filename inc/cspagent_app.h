@@ -35,7 +35,7 @@ public:
 
     // CSP Application Agent Callback Handlers
     CSP_VOID initializeResponse(const INIT_RESPONSE &res);
-    CSP_VOID getConfigResponse(cspeapps::sdk::AppConfig config);
+    CSP_VOID getConfigResponse(cspeapps::sdk::AppConfig config, const OPERATION_ID &op_id = "");
     CSP_VOID beSignallingRequest(cspeapps::sdk::AppSignal signal);
 private:
     CSP_VOID printBanner();

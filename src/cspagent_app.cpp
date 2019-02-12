@@ -80,12 +80,12 @@ CSP_VOID AgentApplication::initializeResponse(const INIT_RESPONSE &res)
 
         // Once we are initialized successfully, our first task is to get the configuration of the application
         // from the BE so that we can start our application. 
-        this->AGENT->GetConfiguration(std::bind(&AgentApplication::getConfigResponse, this, std::placeholders::_1));
+        this->AGENT->GetConfiguration(std::bind(&AgentApplication::getConfigResponse, this, std::placeholders::_1), "", OPERATION_STATE::NO_OP);
     } else {
         log("Initialization Failed");
     }
 }
-CSP_VOID AgentApplication::getConfigResponse(cspeapps::sdk::AppConfig config)
+CSP_VOID AgentApplication::getConfigResponse(cspeapps::sdk::AppConfig config, const OPERATION_ID &op_id)
 {
     log("Received configuration from CSP Platform BE");
     // We will keep a copy of the Configuration object because we may need this while running the application.
@@ -138,7 +138,7 @@ CSP_VOID AgentApplication::getConfigResponse(cspeapps::sdk::AppConfig config)
     // Report back newly applied value
     if ( report_config ) {
         log("We have received new values, reporting back newly applied configuration");
-        this->AGENT->ReportConfiguration(*CONFIG, nullptr, "", OPERATION_STATE::NO_OP);
+        this->AGENT->ReportConfiguration(*CONFIG, nullptr, op_id, OPERATION_STATE::FINISHED);
     }
 
     // Check if we have updated our configuration as part of BE Signal we will report
@@ -164,17 +164,18 @@ CSP_VOID AgentApplication::beSignallingRequest(cspeapps::sdk::AppSignal signal)
 
     // Currently we only have one operation as implemented below.
     std::string operation = signal.GetRequestedOperation();
+    OPERATION_ID op_id = signal.GetOperationId();
     if ( operation == "update_configuration" ) {
         // This operation does not have any parameters, so we are just taking
         // appropriate action to service this request
         // Since the signal is asking us to update the configuration, so we will 
         // just call the GetConfiguration API again.
-        this->AGENT->GetConfiguration(std::bind(&AgentApplication::getConfigResponse, this, std::placeholders::_1));
+        this->AGENT->GetConfiguration(std::bind(&AgentApplication::getConfigResponse, this, std::placeholders::_1, op_id), op_id, OPERATION_STATE::IN_PROGRESS);
     } else if ( operation == "parameter_changed" ) {
         log("Some subscribed parameter has been changed. Take appropriate action");
         cspeapps::sdk::AppSignal::SIG_OP_PARAMS sig_params = signal.GetOperationParams();
         log("Parameter Changed = " + sig_params["parameter_name_1"]);
-        this->AGENT->GetConfiguration(std::bind(&AgentApplication::getConfigResponse, this, std::placeholders::_1));
+        this->AGENT->GetConfiguration(std::bind(&AgentApplication::getConfigResponse, this, std::placeholders::_1, op_id), op_id, OPERATION_STATE::IN_PROGRESS);
     } else if ( operation == "parameter_changed_aapp_with_payload" ) {
         log("P2P Signal received for subscribed parameters");
         cspeapps::sdk::AppSignal::SIG_PAYLOAD_PARAMS payload_params = signal.GetSignalParametersData();
@@ -196,7 +197,7 @@ CSP_VOID AgentApplication::beSignallingRequest(cspeapps::sdk::AppSignal signal)
         // avoid lazy reporting.
         if ( report_config ) {
             log("Reporting back newly applied configuration received in P2P Signal");
-            this->AGENT->ReportConfiguration(*CONFIG, nullptr, signal.GetOperationId(), OPERATION_STATE::FINISHED);
+            this->AGENT->ReportConfiguration(*CONFIG, nullptr, op_id, OPERATION_STATE::FINISHED);
         }
     } 
     log("Signal handling completed for Operation Id = [" + signal.GetOperationId() + "]");
