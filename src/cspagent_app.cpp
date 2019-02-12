@@ -87,12 +87,12 @@ CSP_VOID AgentApplication::initializeResponse(const INIT_RESPONSE &res)
 }
 CSP_VOID AgentApplication::getConfigResponse(cspeapps::sdk::AppConfig config, const OPERATION_ID &op_id)
 {
-    log("Received configuration from CSP Platform BE");
+    log("Received configuration from CSP Platform BE. Operation Id = [" + op_id + "]");
     // We will keep a copy of the Configuration object because we may need this while running the application.
     CONFIG.reset();
     CONFIG = std::unique_ptr<cspeapps::sdk::AppConfig>(new cspeapps::sdk::AppConfig(config));
     // Apply the new value
-    log("Applying requested configuration");
+    log("Applying requested configuration. Operation Id = [" + op_id + "]");
     CSP_STRING helloIntervalReqVal = CONFIG->GetRequestedValue(HELLO_INTERVAL_PARAM_TAG);
     CSP_STRING helloIntervalCurVal = CONFIG->GetCurrentValue(HELLO_INTERVAL_PARAM_TAG);
 
@@ -137,7 +137,7 @@ CSP_VOID AgentApplication::getConfigResponse(cspeapps::sdk::AppConfig config, co
 
     // Report back newly applied value
     if ( report_config ) {
-        log("We have received new values, reporting back newly applied configuration");
+        log("We have received new values, reporting back newly applied configuration. Operation Id = [" + op_id + "]");
         this->AGENT->ReportConfiguration(*CONFIG, nullptr, op_id, OPERATION_STATE::FINISHED);
     }
 
@@ -170,14 +170,15 @@ CSP_VOID AgentApplication::beSignallingRequest(cspeapps::sdk::AppSignal signal)
         // appropriate action to service this request
         // Since the signal is asking us to update the configuration, so we will 
         // just call the GetConfiguration API again.
+        log("Getting configuration from BE for Operation Id = [" + op_id + "]");
         this->AGENT->GetConfiguration(std::bind(&AgentApplication::getConfigResponse, this, std::placeholders::_1, op_id), op_id, OPERATION_STATE::IN_PROGRESS);
     } else if ( operation == "parameter_changed" ) {
-        log("Some subscribed parameter has been changed. Take appropriate action");
+        log("Some subscribed parameter has been changed. Take appropriate action. Operation Id = [" + op_id + "]");
         cspeapps::sdk::AppSignal::SIG_OP_PARAMS sig_params = signal.GetOperationParams();
-        log("Parameter Changed = " + sig_params["parameter_name_1"]);
+        log("Parameter Changed = " + sig_params["parameter_name_1"] + ". Operation Id = [" + op_id + "]");
         this->AGENT->GetConfiguration(std::bind(&AgentApplication::getConfigResponse, this, std::placeholders::_1, op_id), op_id, OPERATION_STATE::IN_PROGRESS);
     } else if ( operation == "parameter_changed_aapp_with_payload" ) {
-        log("P2P Signal received for subscribed parameters");
+        log("P2P Signal received for subscribed parameters. Operation Id = [" + op_id + "]");
         cspeapps::sdk::AppSignal::SIG_PAYLOAD_PARAMS payload_params = signal.GetSignalParametersData();
         bool report_config = false;
 
@@ -196,7 +197,7 @@ CSP_VOID AgentApplication::beSignallingRequest(cspeapps::sdk::AppSignal signal)
         // We need to make sure we report the comitted value of parameters at once to 
         // avoid lazy reporting.
         if ( report_config ) {
-            log("Reporting back newly applied configuration received in P2P Signal");
+            log("Reporting back newly applied configuration received in P2P Signal. Operation Id = [" + op_id + "]");
             this->AGENT->ReportConfiguration(*CONFIG, nullptr, op_id, OPERATION_STATE::FINISHED);
         }
     } 
