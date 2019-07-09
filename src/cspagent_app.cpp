@@ -182,6 +182,8 @@ CSP_VOID AgentApplication::beSignallingRequest(cspeapps::sdk::AppSignal signal)
         cspeapps::sdk::AppSignal::SIG_PAYLOAD_PARAMS payload_params = signal.GetSignalParametersData();
         bool report_config = false;
 
+        printAllP2PParams(payload_params);
+
         // We are expecting api_call_interval value to be changed
         if ( payload_params.find(SUBSCRIBED_API_CALL_INTERVAL_PARAM_TAG) != payload_params.end() ) {
             // Ensure that requested value is different that our current value for this parameter.
@@ -220,4 +222,17 @@ CSP_VOID AgentApplication::print(const CSP_STRING &msg)
     _time_ss << "[" << std::put_time(std::localtime(&now), "%c") << "]";
     CSP_STRING final_message = _time_ss.str() + " " + msg;
     log(final_message);
+}
+CSP_VOID AgentApplication::printAllP2PParams(const cspeapps::sdk::AppSignal::SIG_PAYLOAD_PARAMS &p2p_params)
+{
+    print("====== Printing P2P Parameters Detail ======");
+    for ( auto param : p2p_params ) {
+        CSP_STRING param_name = param.first;
+        CONFIG_PARAMETER detail = param.second;
+        print("Name             = [" + detail.name + "]"); 
+        print("Requested Value  = [" + detail.reqValue + "]"); 
+        print("Current Value    = [" + detail.curValue + "]"); 
+        print("Parameter Id     = [" + detail.id + "]"); 
+        print("Settings Timetag = [" + detail.settingTimeTag + "]"); 
+    }
 }

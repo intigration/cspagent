@@ -40,6 +40,7 @@ public:
 private:
     CSP_VOID printBanner();
     CSP_VOID print(const CSP_STRING &msg);
+    CSP_VOID printAllP2PParams(const cspeapps::sdk::AppSignal::SIG_PAYLOAD_PARAMS &p2p_params);
 public:
     std::unique_ptr<cspeapps::sdk::AppAgent> AGENT;
     std::unique_ptr<cspeapps::sdk::AppConfig> CONFIG;
